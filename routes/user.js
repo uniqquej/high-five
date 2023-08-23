@@ -5,9 +5,29 @@ const UserModel   = require('../models/user')
 const bkfd2Password = require("pbkdf2-password");
 const hasher        = bkfd2Password();
 
+const passport = require('passport');
+
 router.get('/signup', async function(req, res) { 
 	res.render('signup');
 });
+
+router.get('/signin', async function(req, res) {
+	res.render('signin');
+});
+
+router.get('/signout', function(req, res, next) {
+	req.logout(function(error) {
+        if (error) {
+            return next(error);
+        }
+        res.redirect('/');
+    });
+});
+
+router.post('/signin', passport.authenticate('local-login', {
+    successRedirect: '/',
+    failureRedirect: '/user/signin'
+}));
 
 router.post('/signup', async function(req, res) {
 	const id = req.body.id;

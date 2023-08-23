@@ -8,5 +8,14 @@ module.exports = {
             return {result: null, error: error};
         }
     },
+    
+    GetUser: async function(id) {
+        try {
+            const result = await db.query('SELECT * from user where id = ?', id);
+            return {result: result, error: null};
+        } catch (error) {
+            return {result: null, error: error};
+        }
+    },
 
 }

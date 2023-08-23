@@ -1,115 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>face detection</title>
-    <script async src="opencv.js" onload="onOpenCvReady();"></script>
+  <script src="face-api.js"></script>
+  <script src="js/commons.js"></script>
+  <script src="js/faceDetectionControls.js"></script>
+  <script src="js/imageSelectionControls.js"></script>
+  <link rel="stylesheet" type='text/css' href="/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <video id="videoInput" width="640" height="480" autoplay playsinline muted style="position:absolute; top:0; left:0;"></video>
+  <!-- <div id="navbar"></div> -->
+  <div class="center-content page-container">
 
-        <canvas id="canvasOutput" width="640" height="480" style="position:absolute; top:0; left:0;"></canvas>
+    <div class="progress" id="loader">
+      <div class="indeterminate"></div>
     </div>
-    <button id="toggleStream1" onclick="toggleStream()">play</button>
-</body>
+    <div style="position: relative" class="margin">
+      <img id="inputImg" src="" style="max-width: 800px;" />
+      <canvas id="overlay" />
+    </div>
 
-<script>
-    let  src, dst, gray,faces,classifier;
-    function onOpenCvReady() {
-        cv['onRuntimeInitialized']=()=>{
-            console.log('load')
-            
-            src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-            dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-            gray = new cv.Mat();
-            faces = new cv.RectVector();
-            classifier = new cv.CascadeClassifier();
-            classifier.load('haarcascade_frontalface_default.xml');
-        }
+    <div class="row side-by-side">
+  
+      <input id="queryImgUploadInput" type="file" class="waves-effect btn bold" onchange="loadImageFromUpload()" accept=".jpg, .jpeg, .png">
+      <!-- image_selection_control -->
+    </div>
+  </body>
+
+  <script>
+    async function updateResults() {
+      if (!isFaceDetectionModelLoaded()) {
+        return
+      }
+
+      const inputImgEl = $('#inputImg').get(0)
+      const options = getFaceDetectorOptions()
+
+      const results = await faceapi.detectAllFaces(inputImgEl, options)
+
+      const canvas = $('#overlay').get(0)
+      faceapi.matchDimensions(canvas, inputImgEl)
+      faceapi.draw.drawDetections(canvas, faceapi.resizeResults(results, inputImgEl))
     }
-        const constraints = {
-            video: { facingMode: "user", }, audio: false
-        };
-        let video = document.getElementById('videoInput');
 
-        function successCallback(stream) {
-            
-            video.srcObject = stream;
-            video.play();
-            setTimeout(setupCV, 0);
-        }
+    async function run() {
+      // load face detection
+      await changeFaceDetector(SSD_MOBILENETV1)
 
-        function errorCallback(error) {
-            console.log(error);
-        }
-        
+      // start processing image
+      updateResults()
+    }
 
-            const FPS = 30;
-            let streaming = false;
-
-            function toggleStream() {
-                console.log('toggle')
-                if (streaming === false) {
-                    console.log('playing')
-                    navigator.getUserMedia(constraints, successCallback, errorCallback);
-                    document.getElementById('toggleStream1').innerHTML = "Stop";
-                }
-                else {
-                    const stream = video.srcObject;
-                    const tracks = stream.getTracks();
-                    tracks.forEach(track => {
-                        track.stop();
-                    });
-                    document.getElementById('toggleStream1').innerHTML = "Play";
-                }
-                streaming = !streaming;
-            }
-
-            let frame, cap;
-            async function setupCV() {
-                if (frame == undefined) {
-                    cap = await new cv.VideoCapture('video');
-                    frame = await new cv.Mat(480, 640, cv.CV_8UC4);
-                    console.log("cv setup complete.");
-                }
-                setTimeout(process, 0);
-            }
-
-            function processVideo() {
-                try {
-                    if (!streaming) {
-                        // clean and stop.
-                        src.delete();
-                        dst.delete();
-                        gray.delete();
-                        faces.delete();
-                        classifier.delete();
-                        return;
-                    }
-                    let begin = Date.now();
-                    // start processing.
-                    cap.read(src);
-                    src.copyTo(dst);
-                    cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY, 0);
-                    // detect faces.
-                    classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
-                    // draw faces.
-                    for (let i = 0; i < faces.size(); ++i) {
-                        let face = faces.get(i);
-                        let point1 = new cv.Point(face.x, face.y);
-                        let point2 = new cv.Point(face.x + face.width, face.y + face.height);
-                        cv.rectangle(dst, point1, point2, [255, 0, 0, 255]);
-                    }
-                    cv.imshow('canvasOutput', dst);
-                    // schedule the next one.
-                    let delay = 1000/FPS - (Date.now() - begin);
-                    setTimeout(processVideo, delay);
-                } catch (err) {
-                    console.log('error', err);
-                }
-            };
-
-</script>
+    $(document).ready(function() {
+      // renderNavBar('#navbar', 'face_detection')
+      initFaceDetectionControls()
+      run()
+    })
+  </script>
+</body>
 </html>

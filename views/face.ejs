@@ -4,53 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>face detection</title>
+    <script async src="opencv.js" onload="onOpenCvReady();"></script>
 </head>
 <body>
     <div class="container">
         <video id="videoInput" width="640" height="480" autoplay playsinline muted style="position:absolute; top:0; left:0;"></video>
 
-        <canvas id="canvasOutput"></canvas>
+        <canvas id="canvasOutput" width="640" height="480" style="position:absolute; top:0; left:0;"></canvas>
     </div>
-    <button onclick="toggleStream()">start</button>
+    <button id="toggleStream1" onclick="toggleStream()">play</button>
 </body>
 
-<script async src="opencv.js" onload="onOpenCvReady();"></script>
 <script>
+    let  src, dst, gray,faces,classifier;
     function onOpenCvReady() {
         cv['onRuntimeInitialized']=()=>{
             console.log('load')
             
-
-            let video = document.getElementById('videoInput');
-
-            let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-            let dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-            let gray = new cv.Mat();
-            
-            let faces = new cv.RectVector();
-            let classifier = new cv.CascadeClassifier();
-            // load pre-trained classifiers
+            src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+            dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+            gray = new cv.Mat();
+            faces = new cv.RectVector();
+            classifier = new cv.CascadeClassifier();
             classifier.load('haarcascade_frontalface_default.xml');
+        }
+    }
+        const constraints = {
+            video: { facingMode: "user", }, audio: false
+        };
+        let video = document.getElementById('videoInput');
+
+        function successCallback(stream) {
             
-            function successCallback(stream) {
-                video.width = width; video.height = height;//prevent Opencv.js error.
-                canvas.width = width; canvas.height = height;
-                video.srcObject = stream;
-                video.play();
-                setTimeout(setupCV, 0);
-            }
-            function errorCallback(error) {
-                console.log(error);
-            }
+            video.srcObject = stream;
+            video.play();
+            setTimeout(setupCV, 0);
+        }
+
+        function errorCallback(error) {
+            console.log(error);
+        }
         
 
             const FPS = 30;
-            let streaming = true;
+            let streaming = false;
 
             function toggleStream() {
+                console.log('toggle')
                 if (streaming === false) {
+                    console.log('playing')
                     navigator.getUserMedia(constraints, successCallback, errorCallback);
-                    document.getElementById('toggleStream').innerHTML = "Stop";
+                    document.getElementById('toggleStream1').innerHTML = "Stop";
                 }
                 else {
                     const stream = video.srcObject;
@@ -58,16 +62,16 @@
                     tracks.forEach(track => {
                         track.stop();
                     });
-                    document.getElementById('toggleStream').innerHTML = "Play";
+                    document.getElementById('toggleStream1').innerHTML = "Play";
                 }
                 streaming = !streaming;
-                processVideo();
             }
+
             let frame, cap;
             async function setupCV() {
                 if (frame == undefined) {
                     cap = await new cv.VideoCapture('video');
-                    frame = await new cv.Mat(height, width, cv.CV_8UC4);
+                    frame = await new cv.Mat(480, 640, cv.CV_8UC4);
                     console.log("cv setup complete.");
                 }
                 setTimeout(process, 0);
@@ -106,11 +110,6 @@
                     console.log('error', err);
                 }
             };
-            
-            // schedule the first one.
-            setTimeout(processVideo, 0);
-        };
-      }
 
 </script>
 </html>

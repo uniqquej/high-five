@@ -59,14 +59,18 @@ video.addEventListener("playing", () => {
     //   .withFaceLandmarks() //눈코입
     //   .withFaceExpressions(); //표정
 
-
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     faceapi.draw.drawDetections(canvas, resizedDetections);
     // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
     // faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
-    console.log(resizedDetections)
-  }, 100);
+    const dataUrl = canvas.toDataURL("image/jpeg");
+
+    
+    if (detections.length != 0){
+        video.pause();  
+    }
+    console.log(resizedDetections)}, 100);
 });
 
 </script>

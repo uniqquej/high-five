@@ -10,106 +10,85 @@
     <div class="container">
         <video id="videoInput" width="640" height="480" autoplay playsinline muted style="position:absolute; top:0; left:0;"></video>
 
-        <canvas id="canvasOutput" width="640" height="480" style="position:absolute; top:0; left:0;"></canvas>
+        <canvas id="canvasOutput" width="640" height="480" style="position:absolute; top:0; right:0;"></canvas>
     </div>
-    <button id="toggleStream1" onclick="toggleStream()">play</button>
+    <button type="button" id="toggleStream1" onclick="toggleStream()">play</button>
 </body>
 
 <script>
-    let  src, dst, gray,faces,classifier;
+    let  src, dst, cap,gray,faces,classifier;
+    let video,canvas, context;
+    let streaming=false;
+    const faceCascadeFile = "haarcascade_frontalface_default.xml";
     function onOpenCvReady() {
         cv['onRuntimeInitialized']=()=>{
             console.log('load')
-            
+            video = document.getElementById('videoInput');
+            canvas = document.getElementById("canvasOutput");
+            cap = new cv.VideoCapture(video);
             src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
             dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
             gray = new cv.Mat();
             faces = new cv.RectVector();
             classifier = new cv.CascadeClassifier();
-            classifier.load('haarcascade_frontalface_default.xml');
+            
+            app();
         }
     }
-        const constraints = {
-            video: { facingMode: "user", }, audio: false
-        };
-        let video = document.getElementById('videoInput');
-
-        function successCallback(stream) {
-            
-            video.srcObject = stream;
-            video.play();
-            setTimeout(setupCV, 0);
-        }
-
-        function errorCallback(error) {
-            console.log(error);
-        }
+    let webcam;
+    async function app(){
+        classifier.load(faceCascadeFile);
+        console.log('classifier : ',classifier.empty())
+        webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        video.srcObject = webcam;
+        context = canvas.getContext('2d');
         
+        streaming = true
+        setTimeout(processVideo, 0);
+        }
 
-            const FPS = 30;
-            let streaming = false;
+        const FPS = 30;
 
-            function toggleStream() {
-                console.log('toggle')
-                if (streaming === false) {
-                    console.log('playing')
-                    navigator.getUserMedia(constraints, successCallback, errorCallback);
-                    document.getElementById('toggleStream1').innerHTML = "Stop";
-                }
-                else {
-                    const stream = video.srcObject;
-                    const tracks = stream.getTracks();
-                    tracks.forEach(track => {
-                        track.stop();
-                    });
-                    document.getElementById('toggleStream1').innerHTML = "Play";
-                }
-                streaming = !streaming;
+    function processVideo() {
+        try {
+            console.log('process')
+            context.drawImage(video, 0, 0);
+            if (!streaming) {
+                console.log('streaming=false')
+                // clean and stop.
+                src.delete();
+                dst.delete();
+                gray.delete();
+                faces.delete();
+                classifier.delete();
+                return;
             }
-
-            let frame, cap;
-            async function setupCV() {
-                if (frame == undefined) {
-                    cap = await new cv.VideoCapture('video');
-                    frame = await new cv.Mat(480, 640, cv.CV_8UC4);
-                    console.log("cv setup complete.");
-                }
-                setTimeout(process, 0);
+            let begin = Date.now();
+            // start processing.
+            cap.read(src);
+            src.copyTo(dst);
+            cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY,0);
+            classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
+            // draw faces.
+            for (let i = 0; i < faces.size(); ++i) {
+                console.log("faces: ",faces)
+                let face = faces.get(i);
+                let point1 = new cv.Point(face.x, face.y);
+                let point2 = new cv.Point(face.x + face.width, face.y + face.height);
+                cv.rectangle(dst, point1, point2, [255, 0, 0, 255]);
             }
+            cv.imshow('canvasOutput', dst);
+            // schedule the next one.
+            let delay = 1000/FPS - (Date.now() - begin);
+            setTimeout(processVideo, delay);
+        } catch (err) {
+            console.log(cv.exceptionFromPtr(err).msg)
 
-            function processVideo() {
-                try {
-                    if (!streaming) {
-                        // clean and stop.
-                        src.delete();
-                        dst.delete();
-                        gray.delete();
-                        faces.delete();
-                        classifier.delete();
-                        return;
-                    }
-                    let begin = Date.now();
-                    // start processing.
-                    cap.read(src);
-                    src.copyTo(dst);
-                    cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY, 0);
-                    // detect faces.
-                    classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
-                    // draw faces.
-                    for (let i = 0; i < faces.size(); ++i) {
-                        let face = faces.get(i);
-                        let point1 = new cv.Point(face.x, face.y);
-                        let point2 = new cv.Point(face.x + face.width, face.y + face.height);
-                        cv.rectangle(dst, point1, point2, [255, 0, 0, 255]);
-                    }
-                    cv.imshow('canvasOutput', dst);
-                    // schedule the next one.
-                    let delay = 1000/FPS - (Date.now() - begin);
-                    setTimeout(processVideo, delay);
-                } catch (err) {
-                    console.log('error', err);
-                }
-            };
+        }
+    };
+
+  
+        
 
 </script>
 </html>

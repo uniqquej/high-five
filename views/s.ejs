@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Opencv.js tutorial</title>
+</head>
+
+<!-- <script async src="https://docs.opencv.org/3.4/opencv.js"></script> -->
+<script async src="opencv.js"></script>
+
+<body>
+    <button id="toggleStream" onclick="toggleStream()">Play</button>
+    <br>
+    <br>
+    <video id="video" style="display: none;"></video>
+    <canvas id='output'></canvas>
+</body>
+<script>
+    let width, height;
+    function setSize() {
+        if (window.orientation == 0) {
+            width = 480; height = 640; //portrait
+        }
+        else {
+            width = 640; height = 480; //landscape
+        }
+    }
+    setSize();
+    const constraints = {
+        video: { facingMode: "user", }, audio: false
+    };
+    const video = document.getElementById("video");
+    const canvas = document.getElementById('output');
+    // const canvasPos = canvas.getBoundingClientRect();
+    canvas.width = width; canvas.height = height;
+    
+
+    function successCallback(stream) {
+        video.width = width; video.height = height;//prevent Opencv.js error.
+        canvas.width = width; canvas.height = height;
+        video.srcObject = stream;
+        video.play();
+        setTimeout(setupCV, 100);
+    }
+
+    function errorCallback(error) {
+        console.log(cv.exceptionFromPtr(error).msg);
+    }
+
+    let streaming = false;
+    function toggleStream() {
+        if (streaming === false) {
+            navigator.getUserMedia(constraints, successCallback, errorCallback);
+            document.getElementById('toggleStream').innerHTML = "Stop";
+        }
+        else {
+            const stream = video.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => {
+                track.stop();
+            });
+            document.getElementById('toggleStream').innerHTML = "Play";
+        }
+        streaming = !streaming;
+    }
+
+
+    let src, dist, cap, gray,faces,classifier;
+    function setupCV() {
+        if (src == undefined) {
+            src = new cv.Mat(height, width, cv.CV_8UC4);
+            dist = new cv.Mat(height, width, cv.CV_8UC4);
+            faces = new cv.RectVector();
+            cap = new cv.VideoCapture('video');
+            classifier = new cv.CascadeClassifier();
+            classifier.load('haarcascade_frontalface_default.xml');
+            console.log('empty : ',classifier.empty())
+            gray = new cv.Mat();
+            console.log("cv setup");
+        }
+        setTimeout(process, 0);
+    }
+
+    function process() {
+        if (streaming === true) {
+            console.log('process')
+            let begin = Date.now();
+            cap.read(src);
+            cv.cvtColor(dist, gray, cv.COLOR_RGBA2GRAY, 0);
+            classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
+            for (let i = 0; i < faces.size(); ++i) {
+                        let face = faces.get(i);
+                        let point1 = new cv.Point(face.x, face.y);
+                        let point2 = new cv.Point(face.x + face.width, face.y + face.height);
+                        cv.rectangle(dist, point1, point2, [255, 0, 0, 255]);
+                    }
+            let delay = 1000/FPS - (Date.now() - begin);
+            cv.imshow('output', src);       
+            setTimeout(process, delay);
+        }
+    }
+</script>
+
+</html>

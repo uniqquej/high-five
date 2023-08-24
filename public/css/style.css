@@ -1,0 +1,50 @@
+@font-face {
+    font-family: 'NanumSquareRound';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+*{
+    font-family: 'NanumSquareRound';
+}
+
+/* main {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  } */
+  .container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* 예시로 전체 화면 높이로 설정 */
+}
+.container p{
+    font-size: 45px;
+}
+nav{
+    background-color: #0A82FF;
+    color: white;
+}
+
+.sign-up-container, .login-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 90%;
+}
+
+.sign-up-container>input{
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+.login-container>input{
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}

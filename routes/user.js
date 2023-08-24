@@ -15,6 +15,14 @@ router.get('/signin', async function(req, res) {
 	res.render('signin');
 });
 
+router.get('/:id/ring', async function(req, res) {
+    // res.send("user id: " + req.params.id)
+	res.render('ring');
+});
+router.get('/:id/pattern', async function(req, res) {
+	res.render('pattern');
+});
+
 router.get('/signout', function(req, res, next) {
 	req.logout(function(error) {
         if (error) {

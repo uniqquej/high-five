@@ -3,6 +3,10 @@ const router = express.Router();
 const auth        = require('./auth');
 
 router.get('/',auth.CheckAuth, function(req,res){
+    res.render('video')
+})
+
+router.get('/img',auth.CheckAuth, function(req,res){
     res.render('face')
 })
 

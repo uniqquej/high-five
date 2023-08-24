@@ -34,10 +34,18 @@ app.use(express.urlencoded({ extended: false }));
 
 const mainRouter    = require('./routes/face');
 const userRouter    = require('./routes/user');
+const soundRouter    = require('./routes/sound');
+const livesoundRouter    = require('./routes/livesound');
+const inferRouter    = require('./routes/infer');
+const infernsoundRouter    = require('./routes/infernsound.js');
 
 //라우트 설정
 app.use('/', mainRouter);
 app.use('/user', userRouter);
+app.use('/sound', soundRouter);
+app.use('/livesound', livesoundRouter);
+app.use('/infer', inferRouter);
+app.use('/infernsound', infernsoundRouter);
 
 const PORT = 8080;
 app.listen(PORT, function() {

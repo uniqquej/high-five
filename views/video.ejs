@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
-  <script src="opencv.js"></script>
   <script src="face-api.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
   <style>
     body {
       margin: 0;
@@ -24,17 +24,13 @@
   </style>
 </head>
 <body>
-  <!-- <div style="display: flex; flex-direction: column;">
-    <video id="video" width="720" height="560" autoplay muted></video>
-    <div id='output'></div>
-  </div> -->
-  <!-- <img id="imgfile"> -->
   <div class="container">
     <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:0; left:0;"></video>
     <canvas id="canvas" width="640" height="480" style="position:absolute; top:0; left:0;"></canvas>
+    <canvas id="output_canvas" style="position:absolute; top:0; right:0;"></canvas>
   </div>
-  <canvas id="output_canvas"></canvas>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"> </script>
 <script>
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
@@ -42,28 +38,22 @@
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
     let boxWidth, boxHeigth, boxX, boxY;
+    let eyeModel;
 
 Promise.all([
-  faceapi.nets.tinyFaceDetector.loadFromUri("/"),
-  faceapi.nets.faceLandmark68Net.loadFromUri("/"),
-  faceapi.nets.faceRecognitionNet.loadFromUri("/"),
-  faceapi.nets.faceExpressionNet.loadFromUri("/"),
+  faceapi.nets.tinyFaceDetector.loadFromUri("/")
 ]).then(startVideo);
 
-function startVideo() {
-  navigator.mediaDevices
-    .getUserMedia({ video: true })
-    .then(function (stream) {
-      video.srcObject = stream;
-    })
-    .catch(function (err) {
-      console.log(err);
-    });
+async function startVideo() {
+  eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/noodlej/high-five/main/eyeblink/tfjs_model/model.json');
+  stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+  video.srcObject = stream;
+  console.log('start')
 }
-
 
 video.addEventListener("play", () => {
   const displaySize = { width: WIDTH, height: HEIGHT };
+
   let interval = setInterval(async () => {
     context.drawImage(video, 0, 0);
     const detections = await faceapi
@@ -84,12 +74,23 @@ video.addEventListener("play", () => {
         context.strokeRect(boxInfo._x, boxInfo._y, boxInfo.width, boxInfo.height);
 
         img = new Image();
-			  img.onload = function(){
+			  img.onload = async function(){
 				var canvas = document.getElementById("output_canvas");
 				canvas.width = boxWidth;
 				canvas.height = boxHeight;
 				var ctx = canvas.getContext("2d");
 				ctx.drawImage( img, boxX, boxY, boxWidth, boxHeight, 0, 0, boxWidth, boxHeight );
+
+        let tensor = tf.browser.fromPixels(img);
+        tensor = tensor.resizeNearestNeighbor([224, 224]).div(255.0);
+        let x_test = tensor.expandDims(0);
+        console.log(x_test)
+   
+        const pred = eyeModel.predict(x_test).arraySync();;
+        const { values, indices } = tf.topk(pred, 2);
+        const index = indices.arraySync()[0];
+        const probability = values.arraySync()[0];
+        console.log(index, probability);
 			};
 			  img.src = canvas.toDataURL();
     }

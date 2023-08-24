@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <script src="opencv.js"></script>
   <script src="face-api.js"></script>
   <style>
     body {
@@ -23,14 +24,24 @@
   </style>
 </head>
 <body>
-  <div style="display: flex; flex-direction: column;">
+  <!-- <div style="display: flex; flex-direction: column;">
     <video id="video" width="720" height="560" autoplay muted></video>
     <div id='output'></div>
-  </div>
+  </div> -->
   <!-- <img id="imgfile"> -->
+  <div class="container">
+    <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:0; left:0;"></video>
+    <canvas id="canvas" width="640" height="480" style="position:absolute; top:0; left:0;"></canvas>
+  </div>
+  <canvas id="output_canvas"></canvas>
 </body>
 <script>
     const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+    const WIDTH = canvas.width;
+    const HEIGHT = canvas.height;
+    let boxWidth, boxHeigth, boxX, boxY;
 
 Promise.all([
   faceapi.nets.tinyFaceDetector.loadFromUri("/"),
@@ -49,38 +60,40 @@ function startVideo() {
       console.log(err);
     });
 }
-let text = document.getElementById('text');
-let canvas;
+
+
 video.addEventListener("play", () => {
-  canvas = faceapi.createCanvasFromMedia(video);
-  document.body.append(canvas);
-  const displaySize = { width: video.width, height: video.height };
-  faceapi.matchDimensions(canvas, displaySize);
-  setInterval(async () => {
+  const displaySize = { width: WIDTH, height: HEIGHT };
+  let interval = setInterval(async () => {
+    context.drawImage(video, 0, 0);
     const detections = await faceapi
       .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
-    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    faceapi.draw.drawDetections(canvas, resizedDetections);
 
     if (detections.length != 0){
-        video.pause();  
+        video.pause();
+        clearInterval(interval)
+        const boxInfo = detections[0]._box
+        boxWidth = boxInfo.width;
+        boxHeight = boxInfo.height;
+        boxX=boxInfo._x;
+        boxY=boxInfo._y;
+        context.beginPath();
+        context.lineWidth = 2;
+        context.strokeStyle = "#00ff00";
+        context.strokeRect(boxInfo._x, boxInfo._y, boxInfo.width, boxInfo.height);
+
+        img = new Image();
+			  img.onload = function(){
+				var canvas = document.getElementById("output_canvas");
+				canvas.width = boxWidth;
+				canvas.height = boxHeight;
+				var ctx = canvas.getContext("2d");
+				ctx.drawImage( img, boxX, boxY, boxWidth, boxHeight, 0, 0, boxWidth, boxHeight );
+			};
+			  img.src = canvas.toDataURL();
     }
     console.log(resizedDetections)}, 100);
 });
-
-video.addEventListener("pause", () => {    
-    console.log('pause')
-  let w = video.width;
-  let h = video.height;
-  let canvas2 = document.createElement('canvas')
-    canvas2.width = w;
-    canvas2.height = h;
-    let ctx = canvas2.getContext('2d')
-    ctx.drawImage(video,0,0,w,h)
-    document.getElementById('output').appendChild(canvas2)
-});
-
 </script>
 </html>

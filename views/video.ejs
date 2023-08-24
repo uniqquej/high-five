@@ -23,8 +23,11 @@
   </style>
 </head>
 <body>
-  <video id="video" width="720" height="560" autoplay muted></video>
-  <div id="text"></div>
+  <div style="display: flex; flex-direction: column;">
+    <video id="video" width="720" height="560" autoplay muted></video>
+    <div id='output'></div>
+  </div>
+  <!-- <img id="imgfile"> -->
 </body>
 <script>
     const video = document.getElementById("video");
@@ -47,30 +50,36 @@ function startVideo() {
     });
 }
 let text = document.getElementById('text');
-
-video.addEventListener("playing", () => {
-  const canvas = faceapi.createCanvasFromMedia(video);
+let canvas;
+video.addEventListener("play", () => {
+  canvas = faceapi.createCanvasFromMedia(video);
   document.body.append(canvas);
   const displaySize = { width: video.width, height: video.height };
   faceapi.matchDimensions(canvas, displaySize);
   setInterval(async () => {
     const detections = await faceapi
       .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-    //   .withFaceLandmarks() //눈코입
-    //   .withFaceExpressions(); //표정
 
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     faceapi.draw.drawDetections(canvas, resizedDetections);
-    // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-    // faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
-    const dataUrl = canvas.toDataURL("image/jpeg");
 
-    
     if (detections.length != 0){
         video.pause();  
     }
     console.log(resizedDetections)}, 100);
+});
+
+video.addEventListener("pause", () => {    
+    console.log('pause')
+  let w = video.width;
+  let h = video.height;
+  let canvas2 = document.createElement('canvas')
+    canvas2.width = w;
+    canvas2.height = h;
+    let ctx = canvas2.getContext('2d')
+    ctx.drawImage(video,0,0,w,h)
+    document.getElementById('output').appendChild(canvas2)
 });
 
 </script>

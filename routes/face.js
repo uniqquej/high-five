@@ -6,8 +6,4 @@ router.get('/',auth.CheckAuth, function(req,res){
     res.render('video')
 })
 
-router.get('/img',auth.CheckAuth, function(req,res){
-    res.render('face')
-})
-
 module.exports = router;

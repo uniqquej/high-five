@@ -6,88 +6,84 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="css/style.css"></style>
-  <title>Video</title>
-  <script src="face-api.js"></script>
+  <link rel="stylesheet" href="../css/style.css"></style>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+  <title>Video</title>
 </head>
 <body>
-    <header>
-        <%- include('./header') %>
-    </header>
-    <main>
-        <div class="container">
-            <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:0; left:0;"></video>
-            <canvas id="canvas" width="640" height="480" style="position:absolute; top:0; left:0;"></canvas>
-            <canvas id="output_canvas" style="position:absolute; top:0; right:0;"></canvas>
-        </div>
-    </main>
+  <header>
+    <%- include('header') %>
+  </header>
+  <main>
+    <div class="container" style="position: relative;">
+      <button class="my-btn" style="position:absolute; top:70px; left: 300px; font-size:35px;">Play</button>
+      <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:170px; left: 300px;;"></video>
+      <canvas id="canvas" width="640" height="480" style="position:absolute; top:170px; left: 300px;"></canvas>
+      <canvas id="output_canvas" width="640" height="480" style="position:absolute; top:0; right:0;"></canvas>
+    </div>
+  </main>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"> </script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"> </script>
 <script>
+
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
+    
+    const output_canvas = document.getElementById("output_canvas");
+    const output_context = output_canvas.getContext("2d");
+    
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
-    let boxWidth, boxHeigth, boxX, boxY;
-    let eyeModel;
 
-Promise.all([
-  faceapi.nets.tinyFaceDetector.loadFromUri("/")
-]).then(startVideo);
+    let boxWidth, boxHeigth, boxX, boxY, probability;
+    let webcam, lodel;
 
-async function startVideo() {
-  eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/noodlej/high-five/main/eyeblink/tfjs_model/model.json');
-  stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-  video.srcObject = stream;
-  console.log('start')
-}
-
-video.addEventListener("play", () => {
-  const displaySize = { width: WIDTH, height: HEIGHT };
-
-  let interval = setInterval(async () => {
-    context.drawImage(video, 0, 0);
-    const detections = await faceapi
-      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-    const resizedDetections = faceapi.resizeResults(detections, displaySize);
-
-    if (detections.length != 0){
-        video.pause();
-        clearInterval(interval)
-        const boxInfo = detections[0]._box
-        boxWidth = boxInfo.width;
-        boxHeight = boxInfo.height;
-        boxX=boxInfo._x;
-        boxY=boxInfo._y;
-        context.beginPath();
-        context.lineWidth = 2;
-        context.strokeStyle = "#00ff00";
-        context.strokeRect(boxInfo._x, boxInfo._y, boxInfo.width, boxInfo.height);
-
-        img = new Image();
-			  img.onload = async function(){
-				var canvas = document.getElementById("output_canvas");
-				canvas.width = boxWidth;
-				canvas.height = boxHeight;
-				var ctx = canvas.getContext("2d");
-				ctx.drawImage( img, boxX, boxY, boxWidth, boxHeight, 0, 0, boxWidth, boxHeight );
-
-        let tensor = tf.browser.fromPixels(img);
-        tensor = tensor.resizeNearestNeighbor([224, 224]).div(255.0);
-        let x_test = tensor.expandDims(0);
-        console.log(x_test)
-   
-        const pred = eyeModel.predict(x_test).arraySync();;
-        const { values, indices } = tf.topk(pred, 2);
-        const index = indices.arraySync()[0];
-        const probability = values.arraySync()[0];
-        console.log(index, probability);
-			};
-			  img.src = canvas.toDataURL();
+    async function app() {
+        webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        video.srcObject = webcam;
+        model = await blazeface.load();
+        eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/noodlej/high-five/main/eyeblink/tfjs_model/model.json');
+        loop();
     }
-    console.log(resizedDetections)}, 100);
-});
+    async function loop() {
+        const pred = await model.estimateFaces(video, false);
+        context.drawImage(video, 0, 0, 640, 480);
+        if (pred.length > 0) {
+            boxX = pred[0].topLeft[0];
+            boxY = pred[0].topLeft[1];
+            boxWidth = pred[0].bottomRight[0] - boxX;
+            boxHeigth = pred[0].bottomRight[0] - boxY;
+            probability = pred[0].probability[0];
+            landmarks = pred[0].landmarks;
+    
+            context.beginPath();
+            context.lineWidth = 2;
+            context.strokeStyle = "#00ff00";
+            context.strokeRect(boxX, boxY, boxWidth, boxHeigth);   
+            context.font = "25px Arial";
+            context.fillStyle = "#ffffff";
+            context.fillText(`${parseFloat(probability).toFixed(2)}`, boxX, boxY);
+            context.fillStyle = "#ff0000";
+            context.fillRect(landmarks[0][0], landmarks[0][1], 5, 5);
+            context.fillRect(landmarks[1][0], landmarks[1][1], 5, 5);
+        
+            output_canvas.width = boxWidth;
+            output_canvas.height = boxHeigth;
+
+            output_context.drawImage(video, boxX, boxY, boxWidth, boxHeigth, 0, 0, boxWidth, boxHeigth );
+                            
+            let tensor = tf.browser.fromPixels(output_canvas);
+            tensor = tensor.resizeNearestNeighbor([224, 224]).div(255.0);
+            let x_test = tensor.expandDims(0);
+            
+            const eye_pred = eyeModel.predict(x_test).arraySync();
+            console.log(eye_pred[0]);
+        }
+        
+        requestAnimationFrame(loop);
+    }
+    app();
 </script>
 </html>

@@ -1,60 +1,64 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Real-time Object Detection</title>
-  </head>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Real-time Object Detection</title>
+    </head>
+    <body>
+    <main>
+        <p id="resultMessage" style="color: green;"></p>
+        <div class="container">
+            <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:10; left:0;"></video>
+            <!-- 그리기 영역 정의, 비디오 영역에 겹쳐서 그림 -->
+            <canvas id="canvas" width="640" height="480" style="position:absolute; top:10; left:0;"></canvas>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>  
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById("canvas");
+        const context = canvas.getContext("2d");
 
-<body>
-<main>
-    <div class="container">
-        <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:0; left:0;"></video>
-        <!-- 그리기 영역 정의, 비디오 영역에 겹쳐서 그림 -->
-        <canvas id="canvas" width="640" height="480" style="position:absolute; top:0; left:0;"></canvas>
-    </div>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
-<script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById("canvas");
-    const context = canvas.getContext("2d");
+        let webcam, model;
 
-    let webcam, model;
-
-    async function app() {
-        webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        video.srcObject = webcam;
-        model = await cocoSsd.load();
-        
-        loop();
-    }
-    async function loop() {
-        context.drawImage(video, 0, 0);
-        const predictions = await model.detect(canvas);
-        console.log('Predictions: ', predictions);
-
-        /* 객체 탐지 결과 드로잉 */
-        for (let i=0; i<predictions.length; i++) {
-            let [x, y, width, height] = predictions[i].bbox;
+        async function app() {
+            webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            video.srcObject = webcam;
+            model = await cocoSsd.load();
             
-            context.beginPath();
-            context.lineWidth = 2;
-            context.strokeStyle = "#00ff00";
-            context.strokeRect(x, y, width, height);   
-            context.fillStyle = "#00ff00";
-            context.fillRect(x, y-20, width, 20);
-            
-            context.font = "25px Arial";
-            context.fillStyle = "#ffffff";
-            context.fillText(`${predictions[i].class} :  ${parseFloat(predictions[i].score).toFixed(2)}`, x, y);
-
+            loop();
         }
-        
-        requestAnimationFrame(loop);
-    }
-    app();
-</script>
-</body>
+        async function loop() {
+            context.drawImage(video, 0, 0);
+            const predictions = await model.detect(canvas);
+            const person = predictions.some(prediction => prediction.class === 'person');
+            console.log('Predictions: ', predictions);
+
+            /* 객체 탐지 결과 드로잉 */
+            if (person) {
+                resultMessage.textContent = "아기가 뒤집혀 있습니다."; 
+                for (let i=0; i<predictions.length; i++) {
+                    let [x, y, width, height] = predictions[i].bbox;
+                    
+                    context.beginPath();
+                    context.lineWidth = 2;
+                    context.strokeStyle = "#00ff00";
+                    context.strokeRect(x, y, width, height);   
+                    context.fillStyle = "#00ff00";
+                    context.fillRect(x, y-20, width, 20);
+                    
+                    context.font = "25px Arial";
+                    context.fillStyle = "#ffffff";
+                    context.fillText(`${predictions[i].class} :  ${parseFloat(predictions[i].score).toFixed(2)}`, x, y);
+                } } else {
+                    resultMessage.textContent = "탐지할 객체가 없습니다"
+                }
+            
+            requestAnimationFrame(loop);
+        }
+        app();
+    </script>
+    </body>
 </html>

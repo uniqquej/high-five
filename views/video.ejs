@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="../css/style.css"></style>
+  <link rel="stylesheet" href="/css/style.css"></style>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
   <title>Video</title>
 </head>
@@ -15,8 +15,8 @@
     <%- include('header') %>
   </header>
   <main>
-    <div class="container" style="position: relative;">
-      <button class="my-btn" style="position:absolute; top:70px; left: 300px; font-size:35px;">Play</button>
+    <div class="container" style="position: relative; z-index: -5;">
+      <button class="my-btn" style="position:absolute; top:70px; left: 300px; font-size:35px;" onclick="app()" id="cam-btn">Play</button>
       <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:170px; left: 300px;;"></video>
       <canvas id="canvas" width="640" height="480" style="position:absolute; top:170px; left: 300px;"></canvas>
       <canvas id="output_canvas" width="640" height="480" style="position:absolute; top:0; right:0;"></canvas>
@@ -26,8 +26,29 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"> </script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"> </script>
 <script>
+    const userInfo = JSON.parse('<%-JSON.stringify(user)%>');
+    const patternLink = document.getElementById('pattern-btn');
+    patternLink.href = `/user/${userInfo.id}/pattern`
+    const ringLink = document.getElementById('ring-btn');
+    ringLink.href = `/user/${userInfo.id}/ring`
 
+    let animationFrame;
     const video = document.getElementById("video");
+
+    const camBtn = document.getElementById('cam-btn');
+    camBtn.addEventListener('click',function(){
+      if(stopVideo){
+        app();
+        stopVideo = false;
+      }
+      else{
+        window.cancelAnimationFrame(animationFrame);
+        video.srcObject = null;
+        camBtn.textContent = 'Play';
+        stopVideo = true;
+      }
+    });
+    
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
     
@@ -41,10 +62,11 @@
     let webcam, lodel;
 
     async function app() {
+        camBtn.textContent = 'Stop';
         webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
         video.srcObject = webcam;
         model = await blazeface.load();
-        eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/noodlej/high-five/main/eyeblink/tfjs_model/model.json');
+        eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/uniqquej/tfjs/main/eyes_tfjs_model/model.json');
         loop();
     }
     async function loop() {
@@ -82,8 +104,7 @@
             console.log(eye_pred[0]);
         }
         
-        requestAnimationFrame(loop);
+        animationFrame = requestAnimationFrame(loop);
     }
-    app();
 </script>
 </html>

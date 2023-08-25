@@ -11,15 +11,15 @@
   </ul> -->
   <div class="row"">
     <nav class="row">
-        <div class="col text-center logo" onclick="location.replace('video')">
-            아이 돌보미
+        <div class="col text-center" >
+            <a class="logo" href="/">아이 돌보미</a>
         </div>
         <div class="col text-center nav-btns">
-            <button type="button" class="my-btn" onclick="location.replace('video')">카메라 보기</button>
+            <button type="button" class="my-btn" onclick="window.location.href('/')">카메라 보기</button>
             <button type="button" class="my-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">마이페이지</button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="/user/pattern">수면 패턴 확인하기</a></li>
-              <li><a class="dropdown-item" href="/user/ring">알림음 변경</a></li>
+              <li><a class="dropdown-item" id="pattern-btn">수면 패턴 확인하기</a></li>
+              <li><a class="dropdown-item" id="ring-btn">알림음 변경</a></li>
             </ul>
             <button type="button" class="my-btn" onclick="location.replace('/user/signout')">로그아웃</button>
         </div>

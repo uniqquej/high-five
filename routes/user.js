@@ -7,35 +7,19 @@ const hasher        = bkfd2Password();
 
 const passport = require('passport');
 
-router.get('/signup', async function(req, res) { 
-	res.render('signup');
-});
 
 router.get('/signin', async function(req, res) {
-	res.render('signin');
-});
-
-router.get('/:id/ring', async function(req, res) {
-    // res.send("user id: " + req.params.id)
-	res.render('ring');
-});
-router.get('/:id/pattern', async function(req, res) {
-	res.render('pattern');
-});
-
-router.get('/signout', function(req, res, next) {
-	req.logout(function(error) {
-        if (error) {
-            return next(error);
-        }
-        res.redirect('/');
-    });
+    res.render('signin');
 });
 
 router.post('/signin', passport.authenticate('local-login', {
     successRedirect: '/',
     failureRedirect: '/user/signin'
 }));
+
+router.get('/signup', async function(req, res) { 
+    res.render('signup');
+});
 
 router.post('/signup', async function(req, res) {
 	const id = req.body.id;
@@ -62,6 +46,24 @@ router.post('/signup', async function(req, res) {
             res.redirect('/user/signin');
         }
     }); //hasher
+});
+
+
+router.get('/:id/ring', async function(req, res) {
+	res.render('ring',{userId: req.params.id});
+});
+
+router.get('/:id/pattern', async function(req, res) {
+	res.render('pattern',{userId: req.params.id});
+});
+
+router.get('/signout', function(req, res, next) {
+	req.logout(function(error) {
+        if (error) {
+            return next(error);
+        }
+        res.redirect('/');
+    });
 });
 
 module.exports = router;

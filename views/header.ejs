@@ -1,27 +1,27 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">아이 돌보미</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="/user/signout">logout</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="/">카메라 보기</a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              마이페이지
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a>&nbsp&nbsp&nbsp알림음변경</a></li>
-                <li><a>&nbsp&nbsp&nbsp수면 패턴</a></li>
+  <!-- <ul class="nav">
+    <li class="nav-title">
+      <a class="nav-link text-white" href="/">아이돌보미</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link text-white" href="#">비디오 보기</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link text-white" href="#">마이 페이지</a>
+    </li>
+  </ul> -->
+  <div class="row"">
+    <nav class="row">
+        <div class="col text-center logo" onclick="location.replace('video')">
+            아이 돌보미
+        </div>
+        <div class="col text-center nav-btns">
+            <button type="button" class="my-btn" onclick="location.replace('video')">카메라 보기</button>
+            <button type="button" class="my-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">마이페이지</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/user/pattern">수면 패턴 확인하기</a></li>
+              <li><a class="dropdown-item" href="/user/ring">알림음 변경</a></li>
             </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+            <button type="button" class="my-btn" onclick="location.replace('/user/signout')">로그아웃</button>
+        </div>
+    </nav>
+  </div>

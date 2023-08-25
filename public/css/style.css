@@ -4,35 +4,56 @@
     font-weight: normal;
     font-style: normal;
 }
+
 @font-face {
     font-family: 'Cafe24Ssurround';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24Ssurround.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
-
+   
 *{
-    font-family: 'Cafe24Ssurround';
+    font-family: 'NanumSquareRound';
 }
 
 body{
-    background-color: rgb(13, 26, 37);
+    background-color: rgb(13, 26, 37);  
 }
+
+header {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    right: 0;
+}
+
+.logo{
+    font-family: 'Cafe24Ssurround';
+    color: white;
+    font-size: 45px;
+    cursor: pointer;
+}
+.nav-btns button{
+    padding-top: 10px;
+    margin-right: 15px;
+}
+
 .container{
+    margin-top: 110px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     background-color: white;
-    height: 100vh; /* 예시로 전체 화면 높이로 설정 */
+    height: 80vh;
 }
 .container p{
+    font-family: 'Cafe24Ssurround';
     font-size: 60px;
 }
 
-nav{
-    background-color: #0A82FF;
-    color: white;
+h2{
+    font-family: 'Cafe24Ssurround';
 }
 
 .sign-up-container, .login-container{
@@ -43,9 +64,11 @@ nav{
     width: 80%;
 }
 
+
+
 .my-form{
     width: 100%;
-    height: 50px;
+    font-size: 25px;
     margin-top: 10px;
     margin-bottom: 20px;
     border: 3px solid rgb(13, 26, 37);
@@ -54,7 +77,9 @@ nav{
 .my-btn{
     background-color: rgb(13, 26, 37);
     color: white;
+    margin-top: 20px;
     border: 0;
+    border-radius: 5px;
     font-size: large;
 }
 

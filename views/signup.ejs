@@ -11,23 +11,21 @@
 <body>
 	<main>
     <div class="container text-center">
-      <form action="/user/signup" method="POST">
-
+      <div class="title-container">
         <p>아이 돌보미</p>
         <h2>회원 가입</h2>
-        
-        <div class="sign-up-container">  
-          <input placeholder="id" type="text" class="form-control" id="id" name="id" />
-          <!--아이디-->
-          <input placeholder="password" type="password" class="form-control" id="password" name="password" />
-          <!--이름-->
-          <input placeholder="name" type="text" class="form-control" id="name" name="name" />
-          <!--이메일-->
-          <input placeholder="email" type="email" class="form-control" id="email" name="email" />
-          <br>
-          <button type="submit" class="btn btn-primary">회원가입</button>
+      </div>
+      <div class="sign-up-container">  
+          <form action="/user/signup" method="POST">
+            <input placeholder="id" type="text" class="form-control my-form" id="id" name="id" />
+            <input placeholder="password" type="password" class="form-control my-form" id="password" name="password" />
+            <input placeholder="name" type="text" class="form-control my-form" id="name" name="name" />
+            <input placeholder="email" type="email" class="form-control my-form" id="email" name="email" />
+            <br>
+            <button type="button" class="btn btn-primary my-btn" onclick="location.replace('signin')">로그인</button>
+            <button type="submit" class="btn btn-primary my-btn">회원가입</button>
+          </form>
         </div>
-      </form>
     </div>
   </main>
 </body>

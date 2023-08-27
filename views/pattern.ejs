@@ -6,6 +6,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/css/style.css"></style>
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
     <title>My page | ring</title>
 </head>
 <body>
@@ -14,10 +16,15 @@
     </header>
     <main>
         <div class="container">
-            수면 패턴 보여주기
+            <select class="form-select" id="date-select">
+            </select>
+            <div style="width: 60%; margin-top:20px;">
+                <canvas style="width: 100%;" id="my-chart"></canvas>
+            </div>
         </div>
     </main>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 <script>
     const userId = JSON.parse('<%-JSON.stringify(userId)%>');
     const ringLink = document.getElementById('ring-btn');
@@ -25,5 +32,76 @@
     ringLink.addEventListener('click',()=>{
         window.location.href = `/user/${userId}/ring`
     })
+    const pattern = JSON.parse('<%-JSON.stringify(result)%>');
+    let date = new Object();
+
+    let dateSelect = document.getElementById('date-select');
+    dateSelect.addEventListener('change',(e)=>{
+        let ctx = document.getElementById('my-chart').getContext('2d');
+        let selectKey = Object.keys(date)[e.target.value];
+        let times = date[selectKey];
+        
+        let pointer = times.map(data=>{
+            let hour = parseInt(data.split(':')[0])
+            let min = parseInt(data.split(':')[1])
+            return {x:hour, y:min}
+        })
+        console.log(pointer)
+        let chart = new Chart(ctx, {
+            type:'scatter',
+            data:{
+                datasets: [{
+                    label:'알림 시간',
+                    data:pointer,
+                    backgroundColor: 'rgba(75, 192, 192, 1)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    showLine: false
+                }]
+            },
+            options:{
+                scales: {
+                    x: {
+                      type: 'linear',
+                      position: 'bottom',
+                      ticks: {
+                        stepSize: 10 // x축 간격 설정
+                      }
+                    },
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        min:1,
+                        max:24,
+                        stepSize: 1 // y축 간격 설정
+                      }
+                    }
+                  }
+            }
+        })
+
+    })
+
+    console.log(pattern)
+
+    pattern.forEach((data)=>{
+        let dateInfo = moment(data.time).format('YYYY-MM-DD')
+        let timeInfo = moment(data.time).format('hh:mm')
+        if(!date[dateInfo]){
+            date[dateInfo] = [];
+        }else {
+            date[dateInfo].push(timeInfo);
+        }
+    })
+    console.log(date)
+    Object.keys(date).forEach((data,idx)=>{
+        let option = document.createElement('option');
+        option.textContent = data;
+        option.value = idx;
+        dateSelect.appendChild(option);
+    })
+
+
 </script>
 </html>

@@ -2,6 +2,7 @@ const express     = require('express');
 const router      = express.Router();
 
 const UserModel   = require('../models/user')
+const PatternModel   = require('../models/sleep_pattern')
 const bkfd2Password = require("pbkdf2-password");
 const hasher        = bkfd2Password();
 
@@ -54,7 +55,11 @@ router.get('/:id/ring', async function(req, res) {
 });
 
 router.get('/:id/pattern', async function(req, res) {
-	res.render('pattern',{userId: req.params.id});
+    const result = await PatternModel.GetPattern(req.params.id)
+    console.log(result.result[0])
+	res.render('pattern',
+        {userId: req.params.id,
+        result : result.result[0]});
 });
 
 router.get('/signout', function(req, res, next) {

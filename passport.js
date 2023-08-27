@@ -22,7 +22,7 @@ module.exports = function () {
         passReqToCallback: true
         }, async function(req, id, password, done) {
             try {
-                var account = {user: '', email: ''};
+                var account = {id:'', user: '', email: ''};
                 const result = await UserModel.GetUser(id);
                 if (result.error) {
                     console.log(result.error);
@@ -40,6 +40,7 @@ module.exports = function () {
                             return done(false, null, {message: '아이디 또는 패스워드가 일치하지 않습니다.'});
                         } 
                         else {
+                            account.id = user[0].user_id;
                             account.user = user[0].id;
                             account.email = user[0].email;
                             return done(null, account);

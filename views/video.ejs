@@ -19,7 +19,10 @@
       <button class="my-btn" style="position:absolute; top:70px; left: 300px; font-size:35px;" onclick="app()" id="cam-btn">Play</button>
       <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:170px; left: 300px;;"></video>
       <canvas id="canvas" width="640" height="480" style="position:absolute; top:170px; left: 300px;"></canvas>
-      <canvas id="output_canvas" width="640" height="480" style="position:absolute; top:0; right:0;"></canvas>
+      <canvas id="output_canvas" width="640" height="480" style="position:absolute; top:170px; right:40;"></canvas>
+      <div class="text-center" style="background-color: yellow; position:absolute; top:300px; left: 300px;">
+        <h2 id="prediction"></h2>
+      </div>
     </div>
   </main>
 </body>
@@ -33,22 +36,9 @@
     ringLink.href = `/user/${userInfo.id}/ring`
 
     let animationFrame;
+    let stopVideo = true
     const video = document.getElementById("video");
 
-    const camBtn = document.getElementById('cam-btn');
-    camBtn.addEventListener('click',function(){
-      if(stopVideo){
-        app();
-        stopVideo = false;
-      }
-      else{
-        window.cancelAnimationFrame(animationFrame);
-        video.srcObject = null;
-        camBtn.textContent = 'Play';
-        stopVideo = true;
-      }
-    });
-    
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
     
@@ -60,9 +50,11 @@
 
     let boxWidth, boxHeigth, boxX, boxY, probability;
     let webcam, lodel;
+    let openCnt = 0;
+    let closeCnt = 0;
 
     async function app() {
-        camBtn.textContent = 'Stop';
+  
         webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
         video.srcObject = webcam;
         model = await blazeface.load();
@@ -88,23 +80,70 @@
             context.fillStyle = "#ffffff";
             context.fillText(`${parseFloat(probability).toFixed(2)}`, boxX, boxY);
             context.fillStyle = "#ff0000";
-            context.fillRect(landmarks[0][0], landmarks[0][1], 5, 5);
-            context.fillRect(landmarks[1][0], landmarks[1][1], 5, 5);
+            context.fillRect(landmarks[0][0], landmarks[0][1], 5, 5); //오른쪽
+            context.fillRect(landmarks[1][0], landmarks[1][1], 5, 5); //왼쪽
+    
+            let eyeWidth = landmarks[1][0] - landmarks[0][0]; // 눈 위치만 자르도록 수정하기
+            console.log('eyewidth',eyeWidth);
         
-            output_canvas.width = boxWidth;
-            output_canvas.height = boxHeigth;
+            output_canvas.width = eyeWidth + 2*(landmarks[0][0]-boxX);
+            output_canvas.height = boxHeigth/2;
 
-            output_context.drawImage(video, boxX, boxY, boxWidth, boxHeigth, 0, 0, boxWidth, boxHeigth );
+            output_context.drawImage(video, boxX,  boxY, output_canvas.width, boxHeigth/2, 0,0, output_canvas.width, boxHeigth/2 );
                             
             let tensor = tf.browser.fromPixels(output_canvas);
             tensor = tensor.resizeNearestNeighbor([224, 224]).div(255.0);
             let x_test = tensor.expandDims(0);
             
             const eye_pred = eyeModel.predict(x_test).arraySync();
-            console.log(eye_pred[0]);
-        }
-        
+            const { values, indices } = tf.topk(eye_pred, 2);
+            const index = indices.arraySync()[0];
+            const probability2 = values.arraySync()[0];
+            console.log(index, probability2); //index[0] = 0 > closed
+
+            if (index[0]==1){
+              //눈을 뜨면 횟수 카운트 > 한계 넘으면 알림 후 > db에 시간, 카운트 반영
+              openCnt += 1;
+              console.log('open',openCnt);
+              if(openCnt==5){
+                //알림음 울리는 코드 추가
+                // 횟수 변경하기
+                const res = await fetch('/', {
+                  headers:{
+                    "content-type":"application/json"
+                  },
+                  method:'POST',
+                  body : JSON.stringify({
+                    "user_id":userInfo.id,
+                    "count": 1
+                  })
+                })
+                if(res.status ==200){
+                  openCnt=0;
+                }
+              }
+              if(index[0]==0){
+                // 눈을 뜬 후 감으면 횟수 카운트 (깜빡임 감지) > 한계 넘으면 다시 자는 것으로 간주 > 카운트 변수 초기화
+                closeCnt += 1;
+
+              }
+
+            }
+
+            let html = '';
+              html += `${imagenetLabels[index[0]]} : ${probability2[0]}<br>`;
+            document.getElementById('prediction').innerHTML = html;
+        } else {
+          let html = '<p>얼굴이 감지 되지 않아요</p>';
+          document.getElementById('prediction').innerHTML = html;
+          // 엎드림 감지 알림
+      }
         animationFrame = requestAnimationFrame(loop);
     }
+    app()
+    imagenetLabels = [
+        "closed",
+        "open",
+    ];
 </script>
 </html>

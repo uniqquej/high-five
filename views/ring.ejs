@@ -15,15 +15,15 @@
     <main>
         <div class="container">
             알림음을 선택해주세요
-            <form  class="text-center" action="" style="margin-top: 20px;">
-                <select style="width: 500px;" class="form-select" aria-label="Default select example">
-                    <option selected>현재 알림음</option>
+                <select style="width: 500px;" class="form-select" aria-label="Default select example" id="ring-select">
+                    <option>현재 알림음</option>
                     <option value="1">벨소리1</option>
                     <option value="2">벨소리2</option>
                     <option value="3">벨소리3</option>
+                    <option value="4">벨소리4</option>
                 </select> 
-                <button type="submit" class="my-btn">변경</button>
-            </form>
+                <button type="button" class="my-btn" onclick="putRingData()">변경</button>
+
         </div>
     </main>
 </body>
@@ -34,5 +34,26 @@
     patternLink.addEventListener('click',()=>{
         window.location.href = `/user/${userId}/pattern`
     })
+
+    const ringSelect = document.getElementById('ring-select');
+    console.log(JSON.parse('<%-JSON.stringify(result)%>').result[0][0].ring)
+    ringSelect.value = JSON.parse('<%-JSON.stringify(result)%>').result[0][0].ring;
+    const putRingData = async()=>{
+        const ringList = ['ring1.mp3','ring2.mp3','ring3.mp3','ring4.mp3']
+        const ring = ringSelect.value;
+        const res = await fetch(`http://127.0.0.1:8080/user/${userId}/ring`,{
+            headers:{
+                'content-type':'application/json'
+            },
+            method:'PUT',
+            body:JSON.stringify({
+                user_id:userId,
+                ring : ring
+            })
+        });
+        if(res.status==200){
+            alert('변경 완료')
+        }
+    }
 </script>
 </html>

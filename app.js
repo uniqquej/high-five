@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require("path");
 const app = express();
-
+const cors = require('cors')
 const passport          = require('passport');
 const passportConfig    = require('./passport');
 const session           = require('express-session');
@@ -9,6 +9,10 @@ const flash             = require('connect-flash');
 
 passportConfig()
 
+
+app.use(cors({
+    origin: '*'
+}));
 //세션 설정
 app.use(
     session({

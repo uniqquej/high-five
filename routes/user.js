@@ -1,5 +1,7 @@
 const express     = require('express');
 const router      = express.Router();
+const http = require('http');
+const url = require('url');
 
 const UserModel   = require('../models/user')
 const PatternModel   = require('../models/sleep_pattern')
@@ -51,7 +53,25 @@ router.post('/signup', async function(req, res) {
 
 
 router.get('/:id/ring', async function(req, res) {
-	res.render('ring',{userId: req.params.id});
+    const userId = req.params.id
+    const result = await UserModel.GetRing(userId);
+    console.log('result',result.result[0])
+	res.render('ring',{result: result, userId:userId});
+});
+router.put('/:id/ring', async function(req, res) {
+    const userId = req.params.id
+    const ring = req.body.ring
+
+    console.log('ring',ring)
+    const result = await UserModel.UpdateRing(ring,userId);
+    if (result.error) {
+        console.log(result.error);
+        res.redirect(`/user/${userId}/ring`);
+    }
+    else {
+        console.log('RING CHANGED');
+        res.status(200).send('ok');
+    }
 });
 
 router.get('/:id/pattern', async function(req, res) {

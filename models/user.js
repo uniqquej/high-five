@@ -17,5 +17,21 @@ module.exports = {
             return {result: null, error: error};
         }
     },
+    UpdateRing: async function(ring,user_id) {
+        try {
+            const result = await db.query('UPDATE ring SET ring=? WHERE user_id=?', [ring,user_id]);
+            return {result: result, error: null};
+        } catch (error) {
+            return {result: null, error: error};
+        }
+    },
+    GetRing: async function(user_id) {
+        try {
+            const result = await db.query('SELECT * from ring where user_id = ?', user_id);
+            return {result: result, error: null};
+        } catch (error) {
+            return {result: null, error: error};
+        }
+    },
 
 }

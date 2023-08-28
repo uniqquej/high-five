@@ -16,13 +16,11 @@
   </header>
   <main>
     <div class="container" style="position: relative; z-index: -5;">
-      <button class="my-btn" style="position:absolute; top:70px; left: 300px; font-size:35px;" onclick="app()" id="cam-btn">Play</button>
-      <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:170px; left: 300px;;"></video>
-      <canvas id="canvas" width="640" height="480" style="position:absolute; top:170px; left: 300px;"></canvas>
+      <video id="video" width="80%" height="480" autoplay playsinline muted style="position:absolute; top:20px; left: 20px;"></video>
+      <canvas id="canvas"  width="80%" height="480" style="position:absolute; top:20px; left: 20px;"></canvas>
       <canvas id="output_canvas" width="640" height="480" style="display: none;"></canvas>
-      <div class="text-center" style="background-color: yellow; position:absolute; top:300px; left: 300px;">
+      <div class="text-center" style="background-color: yellow; position:absolute; top:600px; left: 150px; width: 80%;">
         <h2 id="prediction"></h2>
-      <div class="text" style="background-color: green; width: 500px; height: 150px;">
         <h2 id="prediction2"></h2>
       </div>
     </div>
@@ -193,11 +191,7 @@
                 if(closeCnt == 100){
                   openCnt=0;
                   closeCnt=0;
-                }
-
-              }
-
-            }
+                }}}
 
             let html = '';
               html += `${imagenetLabels[index[0]]} : ${probability2[0]}<br>`;

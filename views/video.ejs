@@ -22,12 +22,16 @@
       <canvas id="output_canvas" width="640" height="480" style="position:absolute; top:170px; right:40;"></canvas>
       <div class="text-center" style="background-color: yellow; position:absolute; top:300px; left: 300px;">
         <h2 id="prediction"></h2>
+      <div class="text-center" style="background-color: green; position:absolute; top:600px; left: 700px;">
+        <h2 id="prediction2"></h2>
       </div>
     </div>
   </main>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"> </script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"> </script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>  
+
 <script>
     const userInfo = JSON.parse('<%-JSON.stringify(user)%>');
     const patternLink = document.getElementById('pattern-btn');
@@ -49,22 +53,71 @@
     const HEIGHT = canvas.height;
 
     let boxWidth, boxHeigth, boxX, boxY, probability;
-    let webcam, lodel;
+    let webcam, model;
     let openCnt = 0;
     let closeCnt = 0;
 
+    //소리 탐지
+    async function startSoundDetection() {
+      const videoElement = document.createElement('video');
+      videoElement.autoplay = true;
+      
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        videoElement.srcObject = stream;
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const sourceNode = audioContext.createMediaStreamSource(stream);
+        
+        const analyser = audioContext.createAnalyser();
+        sourceNode.connect(analyser);
+        analyser.connect(audioContext.destination);
+        
+        analyser.fftSize = 256;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        let soundThreshold = 20; // Adjust this threshold value as needed
+        
+        const checkSoundThreshold = () => {
+          analyser.getByteFrequencyData(dataArray);
+          
+          const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
+          
+          const resultMessage = document.getElementById('resultMessage');
+          
+          if (average > soundThreshold) {
+            let html = '<p>소리가 나는 중입니다. </p>';
+            document.getElementById('prediction2').innerHTML = html;
+          } else {
+            let html = '<p>소리가 나지 않는 중입니다. </p>';
+            document.getElementById('prediction2').innerHTML = html;
+          }
+          
+          requestAnimationFrame(checkSoundThreshold);
+        };
+        
+        checkSoundThreshold();
+      } catch (error) {
+        console.error("Error accessing webcam:", error);
+      }
+      
+      document.body.appendChild(videoElement);
+    }
+
+
+
     async function app() {
-  
-        webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         video.srcObject = webcam;
         model = await blazeface.load();
         eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/uniqquej/tfjs/main/eyes_tfjs_model/model.json');
         loop();
     }
+
     async function loop() {
         const pred = await model.estimateFaces(video, false);
         context.drawImage(video, 0, 0, 640, 480);
-        if (pred.length > 0) {
+        if (pred.length > 0) { //얼굴 탐지되면 깜빡임 감지
             boxX = pred[0].topLeft[0];
             boxY = pred[0].topLeft[1];
             boxWidth = pred[0].bottomRight[0] - boxX;
@@ -133,14 +186,49 @@
             let html = '';
               html += `${imagenetLabels[index[0]]} : ${probability2[0]}<br>`;
             document.getElementById('prediction').innerHTML = html;
-        } else {
-          let html = '<p>얼굴이 감지 되지 않아요</p>';
-          document.getElementById('prediction').innerHTML = html;
-          // 엎드림 감지 알림
+        
+          } else { //얼굴이 탐지되지 않았을 때, 
+
+            let infermodel = await cocoSsd.load();
+            context.drawImage(video, 0, 0);
+            const predictions = await infermodel.detect(canvas);
+            const person = predictions.some(prediction => prediction.class === 'person');
+            console.log('Predictions: ', predictions);
+
+            if (person) { //사람 객체가 탐지되면 뒤집힌 것으로 간주
+
+              let html = '<p>아이가 뒤집혀 있습니다. </p>';
+              document.getElementById('prediction').innerHTML = html;
+              for (let i=0; i<predictions.length; i++) {
+                let [x, y, width, height] = predictions[i].bbox;
+                context.beginPath();
+                context.lineWidth = 2;
+                context.strokeStyle = "#00ff00";
+                context.strokeRect(x, y, width, height);   
+                context.fillStyle = "#00ff00";
+                context.fillRect(x, y-20, width, 20);
+                context.font = "25px Arial";
+                context.fillStyle = "#ffffff";
+                context.fillText(`${predictions[i].class} :  ${parseFloat(predictions[i].score).toFixed(2)}`, x, y);
+
+              } } else { //사람 객체가 탐지되지 않으면 탐지할 객체가 없는 것으로 간주
+
+              let html = '<p>탐지할 객체가 없습니다. </p>';
+              document.getElementById('prediction').innerHTML = html;
+              } 
       }
+
+
+
+
+
+      
+
         animationFrame = requestAnimationFrame(loop);
     }
+
     app()
+    checkSoundThreshold()
     imagenetLabels = [
         "closed",
         "open",

@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="/css/style.css"></style>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/2dab370456.js" crossorigin="anonymous"></script>
   <title>Video</title>
 </head>
 <body>
@@ -16,12 +17,13 @@
   </header>
   <main>
     <div class="container" style="position: relative; z-index: -5;">
-      <video id="video" width="80%" height="480" autoplay playsinline muted style="position:absolute; top:20px; left: 20px;"></video>
-      <canvas id="canvas"  width="80%" height="480" style="position:absolute; top:20px; left: 20px;"></canvas>
+      <div id="loading"  style="position:absolute; top:24px;"></div>
+      <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute;"></video>
+      <canvas id="canvas" width="640" height="480" style="position:absolute;"></canvas>
       <canvas id="output_canvas" width="640" height="480" style="display: none;"></canvas>
-      <div class="text-center" style="background-color: yellow; position:absolute; top:600px; left: 150px; width: 80%;">
-        <h2 id="prediction"></h2>
-        <h2 id="prediction2"></h2>
+      <div class="text-center" style="background-color: yellow; position:absolute; bottom:5px; left: 150px; width: 80%;">
+        <h3 id="prediction"></h3>
+        <h3 id="prediction2"></h3>
       </div>
     </div>
   </main>
@@ -56,7 +58,7 @@
     const HEIGHT = canvas.height;
 
     let boxWidth, boxHeigth, boxX, boxY, probability;
-    let webcam, model;
+    let webcam, model, infermodel;
     let openCnt = 0;
     let closeCnt = 0;
 
@@ -94,7 +96,7 @@
         analyser.fftSize = 256;
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         
-        let soundThreshold = 30; // Adjust this threshold value as needed
+        let soundThreshold = 25; // Adjust this threshold value as needed
         
         const checkSoundThreshold = () => {
           analyser.getByteFrequencyData(dataArray);
@@ -103,11 +105,10 @@
 
           if (average > soundThreshold) {
             audio.play();
-            let html = '<p>소리가 나는 중입니다. </p>';
+            let html = '소리가 나는 중입니다.';
             document.getElementById('prediction2').innerHTML = html;
           } else {
-            audio.pause();
-            let html = '<p>소리가 나지 않는 중입니다. </p>';
+            let html = '소리가 나지 않는 중입니다.';
             document.getElementById('prediction2').innerHTML = html;
           }
           
@@ -122,12 +123,15 @@
     }
 
     async function app() {
-        console.log('ring', myRing)
-        webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        video.srcObject = webcam;
-        model = await blazeface.load();
-        eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/uniqquej/tfjs/main/eyes_tfjs_model_2/model.json');
-        loop();
+      document.getElementById('loading').innerHTML = '<h2><i class="fa-solid fa-circle-notch fa-spin"></i>&nbsp탐색 준비 중 입니다.</h2>'
+      console.log('ring', myRing)
+      webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      video.srcObject = webcam;
+      model = await blazeface.load();
+      infermodel = await cocoSsd.load();
+      eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/uniqquej/tfjs/main/eyes_tfjs_model_2/model.json');
+      document.getElementById('loading').innerHTML = ' <h2>탐색을 시작합니다.</h2>'
+      loop();
     }
 
     async function loop() {
@@ -175,12 +179,10 @@
               openCnt += 1;
               console.log('open',openCnt);
               if(openCnt==30){
-                //알림음 울리는 코드 추가
-                // 횟수 변경하기
                 audio.play();
-                timeStamp();
-                
+                timeStamp();   
               }
+
               if(index[0]==0){
                 // 눈을 뜬 후 감으면 횟수 카운트 (깜빡임 감지) > 한계 넘으면 다시 자는 것으로 간주 > 카운트 변수 초기화
                 closeCnt += 1;
@@ -190,12 +192,11 @@
                 }}}
 
             let html = '';
-              html += `${imagenetLabels[index[0]]} : ${probability2[0]}<br>`;
+            html += `${imagenetLabels[index[0]]} : ${probability2[0]}<br>`;
             document.getElementById('prediction').innerHTML = html;
         
           } else { //얼굴이 탐지되지 않았을 때, 
-
-            let infermodel = await cocoSsd.load();
+            
             context.drawImage(video, 0, 0);
             const predictions = await infermodel.detect(canvas);
             const person = predictions.some(prediction => prediction.class === 'person');
@@ -203,7 +204,7 @@
 
             if (person) { //사람 객체가 탐지되면 뒤집힌 것으로 간주
               audio.play();
-              let html = '<p>아이가 뒤집혀 있습니다. </p>';
+              let html = '아이가 뒤집혀 있습니다.';
               document.getElementById('prediction').innerHTML = html;
               for (let i=0; i<predictions.length; i++) {
                 let [x, y, width, height] = predictions[i].bbox;
@@ -218,8 +219,7 @@
                 context.fillText(`${predictions[i].class} :  ${parseFloat(predictions[i].score).toFixed(2)}`, x, y);
 
               } } else { //사람 객체가 탐지되지 않으면 탐지할 객체가 없는 것으로 간주
-                audio.pause()
-              let html = '<p>탐지할 객체가 없습니다. </p>';
+              let html = '탐지할 객체가 없습니다.';
               document.getElementById('prediction').innerHTML = html;
               } 
       }

@@ -30,16 +30,18 @@
 <script>
     const userId = JSON.parse('<%-JSON.stringify(userId)%>');
     const patternLink = document.getElementById('pattern-btn');
-   
+    const ringList = ['ring1.mp3','ring2.mp3','ring3.mp3','ring4.mp3']
+    let putRingData;
+
     patternLink.addEventListener('click',()=>{
         window.location.href = `/user/${userId}/pattern`
     })
 
     const ringSelect = document.getElementById('ring-select');
-    console.log(JSON.parse('<%-JSON.stringify(result)%>').result[0][0].ring)
+   try{
+    let preRing = JSON.parse('<%-JSON.stringify(result)%>').result[0][0].ring
     ringSelect.value = JSON.parse('<%-JSON.stringify(result)%>').result[0][0].ring;
-    const putRingData = async()=>{
-        const ringList = ['ring1.mp3','ring2.mp3','ring3.mp3','ring4.mp3']
+    putRingData = async()=>{
         const ring = ringSelect.value;
         const res = await fetch(`http://127.0.0.1:8080/user/${userId}/ring`,{
             headers:{
@@ -52,8 +54,29 @@
             })
         });
         if(res.status==200){
-            alert('변경 완료')
+            alert('변경 완료');
+            window.location.reload();
         }
+    }}
+    catch(err){
+        putRingData =async()=>{
+        const ring = ringSelect.value;
+        const res = await fetch(`http://127.0.0.1:8080/user/${userId}/ring`,{
+            headers:{
+                'content-type':'application/json'
+            },
+            method:'POST',
+            body:JSON.stringify({
+                user_id:userId,
+                ring : ring
+            })
+        });
+        if(res.status==200){
+            alert('등록 완료')
+            window.location.reload();
+        }} 
+            
     }
+    
 </script>
 </html>

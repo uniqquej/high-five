@@ -59,6 +59,24 @@ router.get('/:id/ring', auth.CheckAuth, async function(req, res) {
     console.log('result',result.result[0])
 	res.render('ring',{result: result, userId:userId});
 });
+router.post('/:id/ring',  async function(req, res) {
+    const userId = req.params.id
+    const ringData = {
+        user_id:req.body.user_id,
+        ring:req.body.ring
+    }
+    console.log('ring',ringData)
+    const result = await UserModel.AddRing(ringData);
+    if (result.error) {
+        console.log(result.error);
+        res.redirect(`/user/${userId}/ring`);
+    }
+    else {
+        console.log('ADD RING');
+        res.status(200).send('ok');
+    }
+});
+
 router.put('/:id/ring', async function(req, res) {
     const userId = req.params.id
     const ring = req.body.ring

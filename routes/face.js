@@ -1,11 +1,13 @@
 const express = require('express');
 const PatternModel   = require('../models/sleep_pattern')
+const UserModel   = require('../models/user')
 
 const router = express.Router();
 const auth        = require('./auth');
 
-router.get('/',auth.CheckAuth, function(req,res){
-    res.render('video', {user: req.user})
+router.get('/',auth.CheckAuth, async function(req,res){
+    const result = await UserModel.GetRing(req.user.id);
+    res.render('video', {user: req.user, ring:result.result})
 })
 
 router.post('/', async function(req,res){

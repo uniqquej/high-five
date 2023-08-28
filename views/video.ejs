@@ -19,7 +19,7 @@
       <button class="my-btn" style="position:absolute; top:70px; left: 300px; font-size:35px;" onclick="app()" id="cam-btn">Play</button>
       <video id="video" width="640" height="480" autoplay playsinline muted style="position:absolute; top:170px; left: 300px;;"></video>
       <canvas id="canvas" width="640" height="480" style="position:absolute; top:170px; left: 300px;"></canvas>
-      <canvas id="output_canvas" width="640" height="480" style="position:absolute; top:170px; right:40;"></canvas>
+      <canvas id="output_canvas" width="640" height="480" style="display: none;"></canvas>
       <div class="text-center" style="background-color: yellow; position:absolute; top:300px; left: 300px;">
         <h2 id="prediction"></h2>
       <div class="text" style="background-color: green; width: 500px; height: 150px;">
@@ -34,6 +34,13 @@
 
 <script>
     const userInfo = JSON.parse('<%-JSON.stringify(user)%>');
+    let myRing;
+    try{
+      myRing = JSON.parse('<%-JSON.stringify(ring)%>')[0][0].ring;
+    } catch(err){
+      myRing = 1
+    }
+    var audio = new Audio(`ring${myRing}.mp3`);
     const patternLink = document.getElementById('pattern-btn');
     patternLink.href = `/user/${userInfo.id}/pattern`
     const ringLink = document.getElementById('ring-btn');
@@ -76,7 +83,7 @@
         analyser.fftSize = 256;
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         
-        let soundThreshold = 20; // Adjust this threshold value as needed
+        let soundThreshold = 30; // Adjust this threshold value as needed
         
         const checkSoundThreshold = () => {
           analyser.getByteFrequencyData(dataArray);
@@ -84,9 +91,11 @@
           const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
 
           if (average > soundThreshold) {
+            audio.play();
             let html = '<p>소리가 나는 중입니다. </p>';
             document.getElementById('prediction2').innerHTML = html;
           } else {
+            audio.pause();
             let html = '<p>소리가 나지 않는 중입니다. </p>';
             document.getElementById('prediction2').innerHTML = html;
           }
@@ -102,13 +111,14 @@
       document.body.appendChild(videoElement);
     }
 
-
-
+  
+  
     async function app() {
+        console.log('ring',myRing)
         webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         video.srcObject = webcam;
         model = await blazeface.load();
-        eyeModel = await tf.loadLayersModel('https://github.com/uniqquej/tfjs/blob/main/eyes_tfjs_model_2/model.json');
+        eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/uniqquej/tfjs/main/eyes_tfjs_model_2/model.json');
         loop();
     }
 
@@ -156,9 +166,10 @@
               //눈을 뜨면 횟수 카운트 > 한계 넘으면 알림 후 > db에 시간, 카운트 반영
               openCnt += 1;
               console.log('open',openCnt);
-              if(openCnt==5){
+              if(openCnt==30){
                 //알림음 울리는 코드 추가
                 // 횟수 변경하기
+                audio.play();
                 const res = await fetch('/', {
                   headers:{
                     "content-type":"application/json"
@@ -176,6 +187,10 @@
               if(index[0]==0){
                 // 눈을 뜬 후 감으면 횟수 카운트 (깜빡임 감지) > 한계 넘으면 다시 자는 것으로 간주 > 카운트 변수 초기화
                 closeCnt += 1;
+                if(closeCnt == 100){
+                  openCnt=0;
+                  closeCnt=0;
+                }
 
               }
 
@@ -194,7 +209,7 @@
             console.log('Predictions: ', predictions);
 
             if (person) { //사람 객체가 탐지되면 뒤집힌 것으로 간주
-
+              audio.play();
               let html = '<p>아이가 뒤집혀 있습니다. </p>';
               document.getElementById('prediction').innerHTML = html;
               for (let i=0; i<predictions.length; i++) {
@@ -210,7 +225,7 @@
                 context.fillText(`${predictions[i].class} :  ${parseFloat(predictions[i].score).toFixed(2)}`, x, y);
 
               } } else { //사람 객체가 탐지되지 않으면 탐지할 객체가 없는 것으로 간주
-
+                audio.pause()
               let html = '<p>탐지할 객체가 없습니다. </p>';
               document.getElementById('prediction').innerHTML = html;
               } 

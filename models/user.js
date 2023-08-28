@@ -33,5 +33,14 @@ module.exports = {
             return {result: null, error: error};
         }
     },
+    AddRing: async function(ring) {
+        try {
+            const result = await db.query('INSERT INTO ring SET ?', ring);
+            return {result: result, error: null};
+        } catch (error) {
+            return {result: null, error: error};
+        }
+    },
+
 
 }

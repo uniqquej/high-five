@@ -13,6 +13,7 @@ passportConfig()
 app.use(cors({
     origin: '*'
 }));
+
 //세션 설정
 app.use(
     session({

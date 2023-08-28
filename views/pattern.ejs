@@ -101,7 +101,12 @@
         }
     })
     console.log(date)
-    Object.keys(date).forEach((data,idx)=>{
+    let dateKeys = Object.keys(date).sort(function compare(a,b){
+        if(a>b) return -1;
+        if(a<b) return 1;
+        return 0;
+    });
+    dateKeys.forEach((data,idx)=>{
         let option = document.createElement('option');
         option.textContent = data;
         option.value = idx;

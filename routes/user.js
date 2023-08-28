@@ -57,12 +57,12 @@ router.get('/:id/ring', auth.CheckAuth, async function(req, res) {
     const userId = req.params.id
     const result = await UserModel.GetRing(userId);
     console.log('result',result.result[0])
-	res.render('ring',{result: result, userId:userId});
+	res.render('ring',{result: result.result[0], userId: userId});
 });
 router.post('/:id/ring',  async function(req, res) {
     const userId = req.params.id
     const ringData = {
-        user_id:req.body.user_id,
+        user_id: userId,
         ring:req.body.ring
     }
     console.log('ring',ringData)
@@ -105,7 +105,7 @@ router.delete('/:id/pattern', async function(req, res) {
     const result = await PatternModel.DeletePattern(parseInt(req.params.id,10))
     if (result.error) {
         console.log(result.error);
-        res.redirect(`/user/${req.params.id}/ring`);
+        res.redirect(`/user/${req.params.id}/pattern`);
     }
     else {
         console.log('DELETED');

@@ -28,19 +28,19 @@
     </main>
 </body>
 <script>
+    const result = JSON.parse('<%-JSON.stringify(result)%>');
     const userId = JSON.parse('<%-JSON.stringify(userId)%>');
     const patternLink = document.getElementById('pattern-btn');
 
     let putRingData;
-
     patternLink.addEventListener('click',()=>{
         window.location.href = `/user/${userId}/pattern`
     })
 
     const ringSelect = document.getElementById('ring-select');
-   try{
-    let preRing = JSON.parse('<%-JSON.stringify(result)%>').result[0][0].ring
-    ringSelect.value = JSON.parse('<%-JSON.stringify(result)%>').result[0][0].ring;
+   if(result.length != 0){
+    let preRing = result[0].ring
+    ringSelect.value = preRing;
     putRingData = async()=>{
         const ring = ringSelect.value;
         const res = await fetch(`http://127.0.0.1:8080/user/${userId}/ring`,{
@@ -49,7 +49,6 @@
             },
             method:'PUT',
             body:JSON.stringify({
-                user_id:userId,
                 ring : ring
             })
         });
@@ -57,8 +56,7 @@
             alert('변경 완료');
             window.location.reload();
         }
-    }}
-    catch(err){
+    }} else {
         putRingData =async()=>{
         const ring = ringSelect.value;
         const res = await fetch(`http://127.0.0.1:8080/user/${userId}/ring`,{
@@ -67,7 +65,6 @@
             },
             method:'POST',
             body:JSON.stringify({
-                user_id:userId,
                 ring : ring
             })
         });

@@ -36,7 +36,7 @@
     let date = new Object();
 
     let dateSelect = document.getElementById('date-select');
-    dateSelect.addEventListener('change',(e)=>{
+    dateSelect.addEventListener('click',(e)=>{
         let ctx = document.getElementById('my-chart').getContext('2d');
         let selectKey = Object.keys(date)[e.target.value];
         let times = date[selectKey];
@@ -62,21 +62,27 @@
             },
             options:{
                 scales: {
-                    x: {
+                    xAxes: [{
                       type: 'linear',
                       position: 'bottom',
                       ticks: {
-                        stepSize: 10 // x축 간격 설정
+                        stepSize: 1 // x축 간격 설정
+                      },
+                      scaleLabel:{
+                        display:true,
+                        labelString:"hour(시)"
                       }
-                    },
-                    y: {
+                    }],
+                    yAxes: [{
                       beginAtZero: true,
                       ticks: {
-                        min:1,
-                        max:24,
-                        stepSize: 1 // y축 간격 설정
+                        stepSize: 10 // y축 간격 설정
+                      },
+                      scaleLabel:{
+                        display:true,
+                        labelString:"minutes(분)"
                       }
-                    }
+                    }]
                   }
             }
         })

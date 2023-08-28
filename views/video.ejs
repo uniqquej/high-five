@@ -108,7 +108,7 @@
         webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         video.srcObject = webcam;
         model = await blazeface.load();
-        eyeModel = await tf.loadLayersModel('https://raw.githubusercontent.com/uniqquej/tfjs/main/eyes_tfjs_model/model.json');
+        eyeModel = await tf.loadLayersModel('https://github.com/uniqquej/tfjs/blob/main/eyes_tfjs_model_2/model.json');
         loop();
     }
 

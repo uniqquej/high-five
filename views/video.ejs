@@ -44,8 +44,6 @@
     const ringLink = document.getElementById('ring-btn');
     ringLink.href = `/user/${userInfo.id}/ring`
 
-    let animationFrame;
-    let stopVideo = true
     const video = document.getElementById("video");
 
     const canvas = document.getElementById("canvas");
@@ -70,13 +68,12 @@
                   method:'POST',
                   body : JSON.stringify({
                     "user_id":userInfo.id,
-                    "count": 1
                   })
                 })
-     if(res.status ==200){
+        if(res.status ==200){
                   openCnt=0;
                 }
-    }
+        }
 
     //소리 탐지
     async function startSoundDetection() {
@@ -121,12 +118,11 @@
       } catch (error) {
         console.error("Error accessing webcam:", error);
       }
-      
-      document.body.appendChild(videoElement);
+     // document.body.appendChild(videoElement);
     }
 
     async function app() {
-        console.log('ring',myRing)
+        console.log('ring', myRing)
         webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         video.srcObject = webcam;
         model = await blazeface.load();

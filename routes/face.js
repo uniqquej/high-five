@@ -12,13 +12,11 @@ router.get('/',auth.CheckAuth, async function(req,res){
 
 router.post('/', async function(req,res){
     const user_id = req.body.user_id
-    const count = req.body.count;
     
-    console.log(user_id, count);
+    console.log('user', user_id);
 
         var pattern = {
-            user_id: user_id,
-            count: count,
+            user_id: user_id
         };
         const result = await PatternModel.AddPattern(pattern);
         if (result.error) {

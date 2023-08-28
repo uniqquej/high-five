@@ -16,5 +16,13 @@ module.exports = {
             return {result: null, error: error};
         }
     },
+    DeletePattern: async function(user_id) {
+        try {
+            const result = await db.query('DELETE FROM pattern where user_id = ?',user_id);
+            return {result: result, error: null};
+        } catch (error) {
+            return {result: null, error: error};
+        }
+    },
 
 }

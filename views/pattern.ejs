@@ -16,6 +16,7 @@
     </header>
     <main>
         <div class="container">
+            <button class="my-btn" style="margin-bottom: 50px;" onclick="deletPattern()">데이터 초기화</button>
             <select class="form-select" id="date-select">
             </select>
             <div style="width: 60%; margin-top:20px;">
@@ -32,7 +33,23 @@
     ringLink.addEventListener('click',()=>{
         window.location.href = `/user/${userId}/ring`
     })
+
+    const deletPattern = async()=>{
+        if(confirm('정말로 삭제하시겠습니까?')){
+            const res = await fetch(`http://127.0.0.1:8080/user/${userId}/pattern`,{
+                method:'DELETE'
+            })
+            console.log(res.status);
+            if(res.status==204){
+                location.reload();
+            }
+        }
+    }
+
     const pattern = JSON.parse('<%-JSON.stringify(result)%>');
+    if (pattern.length==0){
+        document.querySelector('.container').innerHTML = '<p>데이터가 없습니다.</p>'
+    } else {
     let date = new Object();
     let dateKeys;
     
@@ -91,8 +108,7 @@
     })
 
     console.log(pattern)
-
-    pattern.forEach((data)=>{
+        pattern.forEach((data)=>{
         let dateInfo = moment(data.time).format('YYYY-MM-DD')
         let timeInfo = moment(data.time).format('HH:mm')
         if(!date[dateInfo]){
@@ -113,6 +129,8 @@
         option.value = idx;
         dateSelect.appendChild(option);
     })
+}
+    
 
 
 </script>

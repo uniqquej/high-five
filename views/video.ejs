@@ -22,7 +22,7 @@
       <canvas id="output_canvas" width="640" height="480" style="position:absolute; top:170px; right:40;"></canvas>
       <div class="text-center" style="background-color: yellow; position:absolute; top:300px; left: 300px;">
         <h2 id="prediction"></h2>
-      <div class="text-center" style="background-color: green; position:absolute; top:600px; left: 700px;">
+      <div class="text" style="background-color: green; width: 500px; height: 150px;">
         <h2 id="prediction2"></h2>
       </div>
     </div>
@@ -60,7 +60,7 @@
     //소리 탐지
     async function startSoundDetection() {
       const videoElement = document.createElement('video');
-      videoElement.autoplay = true;
+      //videoElement.autoplay = true;
       
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -82,9 +82,7 @@
           analyser.getByteFrequencyData(dataArray);
           
           const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-          
-          const resultMessage = document.getElementById('resultMessage');
-          
+
           if (average > soundThreshold) {
             let html = '<p>소리가 나는 중입니다. </p>';
             document.getElementById('prediction2').innerHTML = html;
@@ -228,7 +226,7 @@
     }
 
     app()
-    checkSoundThreshold()
+    startSoundDetection()
     imagenetLabels = [
         "closed",
         "open",

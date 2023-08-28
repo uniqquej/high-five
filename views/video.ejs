@@ -64,6 +64,22 @@
     let openCnt = 0;
     let closeCnt = 0;
 
+    const timeStamp = async()=>{
+      const res = await fetch('/', {
+                  headers:{
+                    "content-type":"application/json"
+                  },
+                  method:'POST',
+                  body : JSON.stringify({
+                    "user_id":userInfo.id,
+                    "count": 1
+                  })
+                })
+     if(res.status ==200){
+                  openCnt=0;
+                }
+    }
+
     //소리 탐지
     async function startSoundDetection() {
       const videoElement = document.createElement('video');
@@ -111,8 +127,6 @@
       document.body.appendChild(videoElement);
     }
 
-  
-  
     async function app() {
         console.log('ring',myRing)
         webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -170,19 +184,8 @@
                 //알림음 울리는 코드 추가
                 // 횟수 변경하기
                 audio.play();
-                const res = await fetch('/', {
-                  headers:{
-                    "content-type":"application/json"
-                  },
-                  method:'POST',
-                  body : JSON.stringify({
-                    "user_id":userInfo.id,
-                    "count": 1
-                  })
-                })
-                if(res.status ==200){
-                  openCnt=0;
-                }
+                timeStamp();
+                
               }
               if(index[0]==0){
                 // 눈을 뜬 후 감으면 횟수 카운트 (깜빡임 감지) > 한계 넘으면 다시 자는 것으로 간주 > 카운트 변수 초기화
@@ -230,13 +233,6 @@
               document.getElementById('prediction').innerHTML = html;
               } 
       }
-
-
-
-
-
-      
-
         animationFrame = requestAnimationFrame(loop);
     }
 

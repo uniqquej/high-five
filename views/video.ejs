@@ -96,7 +96,7 @@
         analyser.fftSize = 256;
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         
-        let soundThreshold = 25; // Adjust this threshold value as needed
+        let soundThreshold = 40; // Adjust this threshold value as needed
         
         const checkSoundThreshold = () => {
           analyser.getByteFrequencyData(dataArray);
@@ -175,7 +175,7 @@
             console.log(index, probability2); //index[0] = 0 > closed
 
             if (index[0]==1){
-              //눈을 뜨면 횟수 카운트 > 한계 넘으면 알림 후 > db에 시간, 카운트 반영
+              //눈을 뜨면 횟수 카운트 > 한계 넘으면 알림 후 > db에 시간 반영
               openCnt += 1;
               console.log('open',openCnt);
               if(openCnt==30){
